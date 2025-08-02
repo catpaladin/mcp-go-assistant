@@ -26,13 +26,13 @@ func main() {
 
 	// Start the MCP server as a subprocess
 	cmd := exec.Command("./bin/mcp-go-assistant")
-	
+
 	// Set up stdio pipes
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		log.Fatalf("Failed to create stdin pipe: %v", err)
 	}
-	
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatalf("Failed to create stdout pipe: %v", err)
@@ -47,7 +47,7 @@ func main() {
 	// Read from stdout and write to stdin directly
 	reader := bufio.NewReader(stdout)
 	writer := bufio.NewWriter(stdin)
-	
+
 	// Create request manually using JSON-RPC
 	request := map[string]interface{}{
 		"jsonrpc": "2.0",

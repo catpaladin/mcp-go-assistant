@@ -25,7 +25,7 @@ func (p *GuidelinesParser) ParseFile(filePath string) ([]string, error) {
 
 	var guidelines []string
 	scanner := bufio.NewScanner(file)
-	
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if guideline := p.extractGuideline(line); guideline != "" {
@@ -40,7 +40,7 @@ func (p *GuidelinesParser) ParseFile(filePath string) ([]string, error) {
 func (p *GuidelinesParser) ParseContent(content string) []string {
 	var guidelines []string
 	lines := strings.Split(content, "\n")
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if guideline := p.extractGuideline(line); guideline != "" {
@@ -55,27 +55,27 @@ func (p *GuidelinesParser) ParseContent(content string) []string {
 func (p *GuidelinesParser) extractGuideline(line string) string {
 	// Remove markdown formatting
 	line = strings.TrimSpace(line)
-	
+
 	// Skip empty lines
 	if line == "" {
 		return ""
 	}
-	
+
 	// Skip markdown headers
 	if strings.HasPrefix(line, "#") {
 		return ""
 	}
-	
+
 	// Skip code blocks
 	if strings.HasPrefix(line, "```") {
 		return ""
 	}
-	
+
 	// Extract from bullet points
 	if strings.HasPrefix(line, "- ") || strings.HasPrefix(line, "* ") {
 		return strings.TrimSpace(line[2:])
 	}
-	
+
 	// Extract from numbered lists
 	if matched := numberListRegex.MatchString(line); matched {
 		parts := numberListRegex.Split(line, 2)
@@ -83,13 +83,13 @@ func (p *GuidelinesParser) extractGuideline(line string) string {
 			return strings.TrimSpace(parts[1])
 		}
 	}
-	
+
 	// Extract from guidelines that contain specific keywords
 	lowerLine := strings.ToLower(line)
 	if containsGuidelineKeywords(lowerLine) {
 		return line
 	}
-	
+
 	return ""
 }
 
@@ -100,13 +100,13 @@ func containsGuidelineKeywords(line string) bool {
 		"ensure", "make sure", "consider", "recommended", "best practice",
 		"convention", "standard", "guideline", "rule", "requirement",
 	}
-	
+
 	for _, keyword := range keywords {
 		if strings.Contains(line, keyword) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 

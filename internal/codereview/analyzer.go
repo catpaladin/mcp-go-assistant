@@ -133,7 +133,7 @@ func (a *Analyzer) checkNaming(file *ast.File, result *ReviewResult) {
 func (a *Analyzer) checkStructure(file *ast.File, result *ReviewResult) {
 	functionCount := 0
 	longFunctions := 0
-	
+
 	ast.Inspect(file, func(n ast.Node) bool {
 		switch node := n.(type) {
 		case *ast.FuncDecl:
@@ -152,7 +152,7 @@ func (a *Analyzer) checkStructure(file *ast.File, result *ReviewResult) {
 						Rule:       "function-length",
 					})
 				}
-				
+
 				// Check for too many parameters
 				if node.Type.Params != nil && len(node.Type.Params.List) > 5 {
 					result.Issues = append(result.Issues, Issue{
@@ -314,7 +314,7 @@ func (a *Analyzer) checkSecurity(file *ast.File, result *ReviewResult) {
 // checkTestability identifies testability issues
 func (a *Analyzer) checkTestability(file *ast.File, result *ReviewResult) {
 	hasGlobalVars := false
-	
+
 	ast.Inspect(file, func(n ast.Node) bool {
 		switch node := n.(type) {
 		case *ast.GenDecl:
@@ -438,7 +438,7 @@ func (a *Analyzer) calculateMetrics(file *ast.File, code string) Metrics {
 
 func (a *Analyzer) calculateScore(result *ReviewResult) int {
 	score := 100
-	
+
 	for _, issue := range result.Issues {
 		switch issue.Severity {
 		case "critical":
@@ -461,12 +461,12 @@ func (a *Analyzer) calculateScore(result *ReviewResult) int {
 func (a *Analyzer) generateSummary(result *ReviewResult) string {
 	issueCount := len(result.Issues)
 	suggestionCount := len(result.Suggestions)
-	
+
 	if issueCount == 0 {
 		return "Code looks good! No major issues found."
 	}
-	
-	return fmt.Sprintf("Found %d issues and %d suggestions. Overall score: %d/100", 
+
+	return fmt.Sprintf("Found %d issues and %d suggestions. Overall score: %d/100",
 		issueCount, suggestionCount, result.Score)
 }
 
@@ -492,16 +492,16 @@ func containsUnderscore(name string) bool {
 
 func calculateCyclomaticComplexity(fn *ast.FuncDecl) int {
 	complexity := 1 // Base complexity
-	
+
 	ast.Inspect(fn, func(n ast.Node) bool {
 		switch n.(type) {
-		case *ast.IfStmt, *ast.ForStmt, *ast.RangeStmt, *ast.SwitchStmt, 
-			 *ast.TypeSwitchStmt, *ast.CaseClause:
+		case *ast.IfStmt, *ast.ForStmt, *ast.RangeStmt, *ast.SwitchStmt,
+			*ast.TypeSwitchStmt, *ast.CaseClause:
 			complexity++
 		}
 		return true
 	})
-	
+
 	return complexity
 }
 

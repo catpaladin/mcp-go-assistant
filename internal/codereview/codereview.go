@@ -62,7 +62,7 @@ func PerformCodeReview(ctx context.Context, params CodeReviewParams) (*ReviewRes
 // addHintSpecificAnalysis adds analysis based on the provided hint
 func addHintSpecificAnalysis(result *ReviewResult, hint string) {
 	hintLower := strings.ToLower(hint)
-	
+
 	if strings.Contains(hintLower, "performance") {
 		result.Suggestions = append(result.Suggestions, Suggestion{
 			Category: "performance",
@@ -70,7 +70,7 @@ func addHintSpecificAnalysis(result *ReviewResult, hint string) {
 			Impact:   "Better runtime performance and resource utilization",
 		})
 	}
-	
+
 	if strings.Contains(hintLower, "security") {
 		result.Suggestions = append(result.Suggestions, Suggestion{
 			Category: "security",
@@ -78,7 +78,7 @@ func addHintSpecificAnalysis(result *ReviewResult, hint string) {
 			Impact:   "Improved application security and reduced attack surface",
 		})
 	}
-	
+
 	if strings.Contains(hintLower, "test") {
 		result.Suggestions = append(result.Suggestions, Suggestion{
 			Category: "testability",
@@ -86,7 +86,7 @@ func addHintSpecificAnalysis(result *ReviewResult, hint string) {
 			Impact:   "Easier testing and better code reliability",
 		})
 	}
-	
+
 	if strings.Contains(hintLower, "maintainability") || strings.Contains(hintLower, "readability") {
 		result.Suggestions = append(result.Suggestions, Suggestion{
 			Category: "maintainability",
