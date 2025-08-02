@@ -1,0 +1,12 @@
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "code-review",
+    "arguments": {
+      "go_code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar name string = \"world\"\n\tfmt.Printf(\"Hello %s\\n\", name)\n}\n\nfunc badFunction(a, b, c, d, e, f int) int {\n\tif a > 0 {\n\t\tif b > 0 {\n\t\t\tif c > 0 {\n\t\t\t\tif d > 0 {\n\t\t\t\t\tif e > 0 {\n\t\t\t\t\t\tif f > 0 {\n\t\t\t\t\t\t\treturn a + b + c + d + e + f\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\treturn 0\n}\n\nfunc ExportedFunctionWithoutDocs() {\n\t// This function lacks documentation\n}",
+      "hint": "focus on code structure and best practices"
+    }
+  }
+}
