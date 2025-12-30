@@ -1,0 +1,113 @@
+project_name: mcp-go-assistant
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+    - go mod verify
+
+builds:
+  - id: mcp-go-assistant
+    env:
+      - CGO_ENABLED=0
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X
+        main.date={{.Date}} -X main.builtBy=goreleaser"
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    binary: "{{ .ProjectName }}"
+    main: ./cmd/mcp-go-assistant
+
+archives:
+  - id: mcp-go-assistant-archive
+    name_template: |-
+      net-tools_{{ .Tag }}_{{ .Os }}_
+      {{- with .Arch -}}
+        {{- if (eq . "386") -}}i386
+        {{- else if (eq . "amd64") -}}x86_64
+        {{- else -}}{{- . -}}
+        {{- end -}} 
+      {{ end }}
+      {{- with .Arm -}}
+        {{- if (eq . "6") -}}hf
+        {{- else -}}v{{- . -}}
+        {{- end -}}
+      {{- end -}}
+    ids:
+      - mcp-go-assistant
+    files: ["LICENSE"]
+    format_overrides:
+      - goos: windows
+        format: zip
+
+universal_binaries:
+  - replace: true
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "^style:"
+
+release:
+  github:
+    owner: catnobanana
+    name: mcp-go-assistant
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## mcp-go-assistant {{ .Tag }} Release
+
+    This release includes the following changes:
+
+  footer: |
+    ## Installation
+
+    ### Using Homebrew
+    ```bash
+    brew install catnobanana/tap/mcp-go-assistant
+    ```
+
+    ### Using Go install
+    ```bash
+    go install github.com/catnobanana/mcp-go-assistant/cmd/mcp-go-assistant@{{ .Tag }}
+    ```
+
+    ### Binary Download
+
+    Download the appropriate binary for your platform from the assets below.
+
+    ## Verification
+
+    Verify the downloaded binary using the checksums file:
+
+    ```bash
+    # Linux/macOS
+    sha256sum -c mcp-go-assistant_{{ .Tag }}_checksums.txt
+
+    # Windows
+    certutil -hashfile mcp-go-assistant_{{ .Tag }}_checksums.txt SHA256
+    ```
+
+    Full Changelog: https://github.com/catnobanana/mcp-go-assistant/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"

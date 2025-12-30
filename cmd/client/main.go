@@ -65,8 +65,8 @@ func main() {
 
 	// Send initialize request
 	reqData, _ := json.Marshal(request)
-	fmt.Fprintf(writer, "%s\n", reqData)
-	writer.Flush()
+	_, _ = fmt.Fprintf(writer, "%s\n", reqData)
+	_ = writer.Flush()
 
 	// Read initialize response
 	_, err = reader.ReadString('\n')
@@ -80,8 +80,8 @@ func main() {
 		"method":  "notifications/initialized",
 	}
 	notifData, _ := json.Marshal(notification)
-	fmt.Fprintf(writer, "%s\n", notifData)
-	writer.Flush()
+	_, _ = fmt.Fprintf(writer, "%s\n", notifData)
+	_ = writer.Flush()
 
 	// Prepare tool call arguments
 	args := map[string]interface{}{
@@ -103,8 +103,8 @@ func main() {
 	}
 
 	toolData, _ := json.Marshal(toolRequest)
-	fmt.Fprintf(writer, "%s\n", toolData)
-	writer.Flush()
+	_, _ = fmt.Fprintf(writer, "%s\n", toolData)
+	_ = writer.Flush()
 
 	// Read tool response
 	toolResponse, err := reader.ReadString('\n')
@@ -136,8 +136,8 @@ func main() {
 	}
 
 	// Clean up
-	stdin.Close()
-	stdout.Close()
+	_ = stdin.Close()
+	_ = stdout.Close()
 	if err := cmd.Wait(); err != nil {
 		log.Printf("Server exited with error: %v", err)
 	}

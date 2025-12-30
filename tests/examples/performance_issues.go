@@ -1,11 +1,11 @@
-package main
+package example // nolint:govet
 
 import (
 	"fmt"
 	"strings"
 )
 
-func main() {
+func ExamplePerformanceIssues() {
 	// This will be flagged for performance issues
 	result := ""
 	for i := 0; i < 10000; i++ {
@@ -14,7 +14,7 @@ func main() {
 	fmt.Println(result)
 }
 
-func inefficientStringBuilding(items []string) string {
+func ExampleInefficientStringBuilding(items []string) string {
 	result := ""
 	for _, item := range items {
 		result = result + item + ","
@@ -22,7 +22,7 @@ func inefficientStringBuilding(items []string) string {
 	return result
 }
 
-func betterStringBuilding(items []string) string {
+func ExampleBetterStringBuilding(items []string) string {
 	var builder strings.Builder
 	for _, item := range items {
 		builder.WriteString(item)
@@ -31,7 +31,7 @@ func betterStringBuilding(items []string) string {
 	return builder.String()
 }
 
-func veryLongFunctionThatShouldBeBrokenDown(
+func ExampleVeryLongFunctionThatShouldBeBrokenDown(
 	param1 string,
 	param2 string,
 	param3 string,
@@ -39,7 +39,7 @@ func veryLongFunctionThatShouldBeBrokenDown(
 	param5 string,
 	param6 string,
 	param7 string) (string, error) {
-	
+
 	if param1 == "" {
 		if param2 == "" {
 			if param3 == "" {

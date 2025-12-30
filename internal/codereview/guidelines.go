@@ -21,7 +21,7 @@ func (p *GuidelinesParser) ParseFile(filePath string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var guidelines []string
 	scanner := bufio.NewScanner(file)

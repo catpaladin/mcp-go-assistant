@@ -1,0 +1,108 @@
+# MCP Go Assistant - Production Configuration
+# Copy this file to config.yaml and adjust as needed
+
+server:
+  name: "mcp-go-assistant"
+  version: "1.2.0"
+  host: "0.0.0.0"
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+
+logging:
+  level: "info"  # trace, debug, info, warn, error, fatal, panic
+  format: "json"  # json or console
+  output_path: "stdout"  # stdout, stderr, or file path
+  no_color: false
+
+# Error handling configuration
+error_handling:
+  verbosity: "detailed"  # minimal, detailed, debug
+  include_stack: false  # Include stack traces in error responses
+  response_format: "json"  # json, text
+  expose_details: false  # Expose error details to clients
+  log_all_errors: true  # Log all errors, including client errors
+  track_metrics: true  # Track error metrics
+  category_mappings: {}  # Custom error category mappings
+
+metrics:
+  enabled: true
+  path: "/metrics"
+
+tools:
+  godoc_timeout: 30s
+  code_review_timeout: 60s
+  test_gen_timeout: 45s
+
+timeouts:
+  default: 30s
+  shutdown: 30s
+  request: 60s
+  grace_period: 10s
+
+validations:
+  max_input_size: 1048576  # 1MB in bytes
+  allowed_chars: "[a-zA-Z0-9_ ./\\-]"
+  enabled_rules:
+    - "not_empty"
+    - "package_path"
+    - "file_path"
+    - "code_safety"
+    - "symbol_name"
+  disabled_rules: []
+
+# Rate limiting configuration
+rate_limit:
+  enabled: true  # Enable or disable rate limiting globally
+  limit: 100     # Default maximum requests per window
+  window: 1m     # Default time window for rate limiting
+  mode: "per-tool"  # Rate limiting mode: "per-tool", "global", "ip-based", "custom"
+  algorithm: "token-bucket"  # Algorithm: "token-bucket", "sliding-window"
+  store_type: "memory"  # Storage backend: "memory", "noop"
+
+  # Tool-specific rate limits (override defaults)
+  tools:
+    godoc:
+      enabled: true
+      limit: 50   # 50 requests per minute
+      window: 1m
+    code-review:
+      enabled: true
+      limit: 30   # 30 requests per minute
+      window: 1m
+    test-gen:
+      enabled: true
+      limit: 30   # 30 requests per minute
+      window: 1m
+
+# Retry configuration
+retry:
+  enabled: true  # Enable or disable retry logic globally
+  max_attempts: 3  # Default maximum retry attempts
+  initial_delay: 1s  # Initial delay before first retry
+  max_delay: 30s  # Maximum delay between retries
+  multiplier: 2.0  # Multiplier for exponential backoff
+  jitter: true  # Add randomness to delays to prevent thundering herd
+  strategy: "exponential"  # Backoff strategy: "exponential", "linear", "constant", "none"
+
+  # Tool-specific retry configuration (override defaults)
+  tools:
+    godoc:
+      enabled: true
+      max_attempts: 3
+      initial_delay: 1s
+      max_delay: 15s
+      strategy: "exponential"
+    code-review:
+      enabled: true
+      max_attempts: 2
+      initial_delay: 500ms
+      max_delay: 10s
+      strategy: "exponential"
+    test-gen:
+      enabled: true
+      max_attempts: 2
+      initial_delay: 500ms
+      max_delay: 10s
+      strategy: "exponential"
+

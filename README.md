@@ -1,15 +1,36 @@
 # MCP Go Assistant
 
-A Model Context Protocol (MCP) server that provides various Go development tools, including documentation access and code analysis capabilities for LLMs.
+A Model Context Protocol (MCP) server that provides various Go development tools,
+including documentation access and code analysis capabilities for LLMs.
 
 ## Features
 
 - **Package Documentation**: Get documentation for any Go package
-- **Symbol Documentation**: Get specific documentation for functions, types, constants, and variables
-- **Code Review**: Analyze Go code and provide improvement suggestions based on best practices
+- **Symbol Documentation**: Get specific documentation for functions, types, constants,
+  and variables
+- **Code Review**: Analyze Go code and provide improvement suggestions based on best
+  practices
+- **Test Generation**: Generate test scaffolding including interfaces, mocks, and
+  table-driven tests
 - **Custom Guidelines**: Support for custom coding guidelines via markdown files
 - **MCP Protocol**: Full MCP server implementation with stdio transport
 - **Error Handling**: Proper error responses for invalid packages or symbols
+
+## Production Features (New!)
+
+The MCP Go Assistant now includes enterprise-grade features:
+
+- **Structured Logging**: JSON and console logging with request tracking, using zerolog
+- **Metrics**: Prometheus-compatible metrics for monitoring and observability
+- **Configuration Management**: YAML config files with environment variable overrides
+- **Health Checks**: System health monitoring with custom check registration
+- **Graceful Shutdown**: Proper signal handling and cleanup
+- **Request Timeouts**: Configurable timeouts per tool with context propagation
+- **Error Classification**: Automatic error categorization for metrics
+
+For detailed production documentation, see
+[PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) and
+[PRODUCTION_IMPROVEMENTS.md](PRODUCTION_IMPROVEMENTS.md).
 
 ## Project Structure
 
@@ -110,14 +131,16 @@ mcp-go-assistant
 
 #### With MCP Clients
 
-Most MCP clients expect the server to be configured in their settings. The server should be invoked with:
+Most MCP clients expect the server to be configured in their settings. The server should
+be invoked with:
 
 **Command**: `mcp-go-assistant` (or full path to binary)  
 **Transport**: `stdio`
 
 #### Claude Desktop Integration
 
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+Add to your Claude Desktop configuration
+(`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
 ```json
 {
@@ -131,7 +154,8 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 
 #### VS Code / Cursor Integration
 
-If using with MCP-compatible VS Code extensions, configure the server path in your extension settings.
+If using with MCP-compatible VS Code extensions, configure the server path in your
+extension settings.
 
 #### Windsurf Integration
 
@@ -157,6 +181,561 @@ Alternatively, if Windsurf uses a configuration file (similar to Claude Desktop)
 }
 ```
 
+## Tools
+
+The MCP Go Assistant server provides three powerful tools for Go development. Each tool
+is designed to help you work more efficiently with Go code.
+
+### Tool Overview
+
+| Tool            | Description                                         | Use Cases                                                                                       |
+| --------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **go-doc**      | Get documentation for Go packages and symbols       | Looking up package documentation, understanding function signatures, exploring standard library |
+| **code-review** | Analyze Go code for best practices and improvements | Code quality checks, performance analysis, security reviews, adherence to coding guidelines     |
+| **test-gen**    | Generate test scaffolding for Go code               | Creating test files, generating interface mocks, building table-driven tests                    |
+
+---
+
+### go-doc Tool
+
+**Tool Name**: `go-doc`
+
+**Description**: Get Go documentation for packages and symbols using the standard
+`go doc` command. This tool provides access to comprehensive documentation for the
+standard library, third-party packages, and your own code.
+
+#### Parameters
+
+| Parameter      | Type   | Required | Description                                                                                  |
+| -------------- | ------ | -------- | -------------------------------------------------------------------------------------------- |
+| `package_path` | string | Yes      | The Go package path to query (e.g., `"fmt"`, `"net/http"`, `"github.com/user/repo/package"`) |
+| `symbol_name`  | string | No       | Specific symbol within the package (e.g., `"Printf"`, `"Server"`, `"Context"`)               |
+| `working_dir`  | string | No       | Optional working directory with go.mod file for external package access                      |
+
+#### Usage Examples
+
+**Example 1: Get package documentation**
+
+```
+"Show me the documentation for fmt package"
+"What's in the net/http package?"
+```
+
+**Example 2: Get specific symbol documentation**
+
+```
+"Show me the documentation for fmt.Printf"
+"Get documentation for net/http.Server"
+"What methods are available on context.Context?"
+"Explain sync.WaitGroup.Add"
+```
+
+**Example 3: Explore third-party packages**
+
+```
+"Show me the documentation for github.com/gin-gonic/gin"
+"What does gorm.DB do?"
+```
+
+#### MCP Request Example
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "go-doc",
+    "arguments": {
+      "package_path": "fmt",
+      "symbol_name": "Printf"
+    }
+  }
+}
+```
+
+#### Typical Responses
+
+The tool returns documentation including:
+
+- Package overview
+- Function signatures
+- Type definitions
+- Method documentation
+- Examples (when available)
+
+---
+
+### code-review Tool
+
+**Tool Name**: `code-review`
+
+**Description**: Analyze Go code and provide improvement suggestions based on best
+practices, security considerations, performance optimizations, and custom coding
+guidelines.
+
+#### Parameters
+
+| Parameter            | Type   | Required | Description                                                                  |
+| -------------------- | ------ | -------- | ---------------------------------------------------------------------------- |
+| `go_code`            | string | Yes      | The Go code content to analyze                                               |
+| `guidelines_file`    | string | No       | Path to markdown file with coding guidelines                                 |
+| `guidelines_content` | string | No       | Markdown content with coding guidelines (alternative to file)                |
+| `hint`               | string | No       | Specific focus area (e.g., `"performance"`, `"security"`, `"documentation"`) |
+
+#### Usage Examples
+
+**Example 1: General best practices review**
+
+````
+"Review this Go code for best practices:
+```go
+func main() {
+    var name string = "world"
+    fmt.Printf("Hello %s\n", name)
+}
+```"
+````
+
+**Example 2: Performance-focused review**
+
+````
+"Analyze this code for performance issues:
+```go
+func buildString(items []string) string {
+    result := ""
+    for _, item := range items {
+        result += item + ","
+    }
+    return result
+}
+```"
+````
+
+**Example 3: Security-focused review**
+
+````
+"Check this code for security vulnerabilities:
+```go
+func handleInput(input string) {
+    cmd := exec.Command("sh", "-c", input)
+    cmd.Run()
+}
+```"
+````
+
+**Example 4: Documentation review**
+
+````
+"Review this code focusing on documentation:
+```go
+func process(data string) error {
+    if data == "" {
+        return errors.New("empty")
+    }
+    return nil
+}
+```"
+````
+
+**Example 5: Custom guidelines review**
+
+````
+"Review this code using these guidelines:
+- Avoid using panic in production code
+- Always validate input parameters
+- Use context.Context for timeouts
+
+```go
+func processData(data string) {
+    if data == "" {
+        panic("empty data")
+    }
+    // process data...
+}
+```"
+````
+
+#### MCP Request Examples
+
+**Basic Code Review:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "code-review",
+    "arguments": {
+      "go_code": "package main\n\nfunc ExportedFunction() {\n\t// Missing documentation\n}",
+      "hint": "focus on documentation and best practices"
+    }
+  }
+}
+```
+
+**Code Review with Guidelines:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "code-review",
+    "arguments": {
+      "go_code": "package main\n\nfunc main() {\n\tpanic(\"error\")\n}",
+      "guidelines_content": "- Avoid using panic in production code\n- Always handle errors gracefully",
+      "hint": "focus on error handling"
+    }
+  }
+}
+```
+
+**Code Review with Guidelines File:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "code-review",
+    "arguments": {
+      "go_code": "package main\n\nfunc process() error {\n\treturn nil\n}",
+      "guidelines_file": "/path/to/guidelines.md",
+      "hint": "focus on security"
+    }
+  }
+}
+```
+
+#### Review Categories
+
+The tool analyzes code in these areas:
+
+- **Code Quality**: Naming conventions, code organization, complexity
+- **Error Handling**: Proper error wrapping, panic avoidance, error messages
+- **Documentation**: Function/type documentation, examples, clarity
+- **Security**: Input validation, SQL injection prevention, sensitive data handling
+- **Performance**: Memory usage, goroutine management, algorithmic efficiency
+- **Testing**: Test coverage, test quality, edge cases
+- **Concurrency**: Race conditions, mutex usage, channel patterns
+
+---
+
+### test-gen Tool
+
+**Tool Name**: `test-gen`
+
+**Description**: Generate Go test scaffolding including interfaces, mocks, and
+table-driven tests. This tool helps you quickly create test files with proper structure
+and best practices.
+
+#### Parameters
+
+| Parameter      | Type   | Required | Description                                                                                                                                   |
+| -------------- | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `go_code`      | string | Yes      | The Go code to generate tests for                                                                                                             |
+| `focus`        | string | No       | Test generation focus: `"interfaces"` (extract interfaces and generate mocks), `"table"` (table-driven tests), or `"unit"` (basic unit tests) |
+| `package_name` | string | No       | Package name for generated tests (defaults to `"package_test"`)                                                                               |
+
+#### Usage Examples
+
+**Example 1: Generate basic unit tests**
+
+````
+"Generate tests for this Go function:
+```go
+func Add(a, b int) int {
+    return a + b
+}
+```"
+````
+
+**Example 2: Generate interface mocks**
+
+````
+"Create interface mocks for this code:
+```go
+type UserService interface {
+    GetUser(id int) (*User, error)
+    CreateUser(user *User) error
+}
+
+type Service struct {
+    userRepo UserService
+}
+```"
+````
+
+**Example 3: Generate table-driven tests**
+
+````
+"Generate table-driven tests for:
+```go
+func ParseSize(s string) (int, error) {
+    var size int
+    _, err := fmt.Sscanf(s, "%d", &size)
+    return size, err
+}
+```"
+````
+
+#### MCP Request Examples
+
+**Basic Unit Tests:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "test-gen",
+    "arguments": {
+      "go_code": "package main\n\nfunc Add(a, b int) int {\n\treturn a + b\n}",
+      "focus": "unit",
+      "package_name": "mypackage_test"
+    }
+  }
+}
+```
+
+**Interface Extraction and Mocks:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "method": "tools/call",
+  "params": {
+    "name": "test-gen",
+    "arguments": {
+      "go_code": "package main\n\ntype Database interface {\n\tQuery(query string) (string, error)\n}\n\ntype Service struct {\n\tdb Database\n}",
+      "focus": "interfaces"
+    }
+  }
+}
+```
+
+**Table-Driven Tests:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "test-gen",
+    "arguments": {
+      "go_code": "package main\n\nfunc ValidateEmail(email string) bool {\n\treturn len(email) > 5\n}",
+      "focus": "table"
+    }
+  }
+}
+```
+
+#### Generated Test Features
+
+The `test-gen` tool creates:
+
+- **Unit Tests**: Basic test structure with `TestFunctionName` format
+- **Interface Tests**: Extracted interfaces with mock implementations using `gomock` or
+  `testify`
+- **Table-Driven Tests**: Structured test cases with input/output pairs
+- **Test Helpers**: Common test utilities and setup functions
+- **Edge Cases**: Tests for boundary conditions and error scenarios
+
+---
+
+## Integration Examples
+
+### Claude Desktop Integration
+
+**Step 1: Locate Configuration File**
+
+Find your Claude Desktop config file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+**Step 2: Add Server Configuration**
+
+```json
+{
+  "mcpServers": {
+    "go-assistant": {
+      "command": "/full/path/to/mcp-go-assistant/bin/mcp-go-assistant",
+      "args": []
+    }
+  }
+}
+```
+
+**Step 3: Restart Claude Desktop**
+
+After adding the configuration, restart Claude Desktop to load the MCP server.
+
+**Step 4: Use the Tools**
+
+Once configured, you can ask Claude questions like:
+
+````
+User: "Show me the documentation for fmt.Printf"
+Claude: [Uses go-doc tool] Returns documentation for fmt.Printf
+
+User: "Review this code for performance issues:"
+```go
+func buildString(items []string) string {
+    result := ""
+    for _, item := range items {
+        result += item + ","
+    }
+    return result
+}
+````
+
+Claude: [Uses code-review tool] Provides performance analysis and suggestions
+
+User: "Generate unit tests for this function:"
+
+```go
+func CalculateTax(price float64, rate float64) float64 {
+    return price * rate / 100
+}
+```
+
+Claude: [Uses test-gen tool] Generates comprehensive unit tests
+
+````
+
+### Windsurf Integration
+
+**Step 1: Via Settings UI**
+
+1. Open Windsurf
+2. Go to **Settings** → **Extensions** → **MCP Servers**
+3. Click **Add Server**
+4. Configure:
+   - **Name**: `Go Assistant`
+   - **Command**: `/full/path/to/mcp-go-assistant/bin/mcp-go-assistant`
+   - **Transport**: `stdio`
+5. Save and restart Windsurf
+
+**Step 2: Via Configuration File** (if supported)
+
+Locate Windsurf's config file:
+- **macOS**: `~/Library/Application Support/Windsurf/mcp_config.json`
+- **Windows**: `%APPDATA%\Windsurf\mcp_config.json`
+- **Linux**: `~/.config/windsurf/mcp_config.json`
+
+Add the server configuration:
+
+```json
+{
+  "mcpServers": {
+    "go-assistant": {
+      "command": "/full/path/to/mcp-go-assistant/bin/mcp-go-assistant",
+      "args": [],
+      "description": "Go development assistant with documentation, code review, and test generation"
+    }
+  }
+}
+````
+
+**Step 3: Usage in Windsurf**
+
+Once configured, Windsurf can help you:
+
+- **Documentation Queries**:
+
+  ```
+  "Show me the documentation for net/http.Server"
+  "What does context.WithTimeout do?"
+  ```
+
+- **Code Review**:
+
+  ```
+  "Review this handler for best practices: [select code]"
+  "Check this function for security issues"
+  ```
+
+- **Test Generation**:
+  ```
+  "Generate tests for this service: [select code]"
+  "Create mocks for this interface"
+  ```
+
+### VS Code / Cursor Integration
+
+With MCP-compatible extensions (e.g., Continue, MCP extensions):
+
+**Step 1: Install MCP Extension**
+
+Search for and install an MCP-compatible extension in the VS Code Marketplace.
+
+**Step 2: Configure MCP Server**
+
+Add to your VS Code settings or the extension's configuration file:
+
+```json
+{
+  "mcp.servers": {
+    "go-assistant": {
+      "command": "/full/path/to/mcp-go-assistant/bin/mcp-go-assistant",
+      "args": []
+    }
+  }
+}
+```
+
+**Step 3: Reload and Use**
+
+Reload VS Code and start using the tools via:
+
+- Chat interface
+- Command palette commands
+- Context menu options
+
+### Other MCP Clients
+
+The server works with any MCP-compatible client. Configure:
+
+- **Command**: Path to the `mcp-go-assistant` binary
+- **Transport**: `stdio`
+- **Protocol**: MCP 2024-11-05
+
+### Workflow Integration
+
+**Pre-commit Code Review:**
+
+```bash
+#!/bin/bash
+# .git/hooks/pre-commit
+
+echo "Running MCP code review..."
+for file in $(git diff --cached --name-only --diff-filter=AM | grep '\.go$'); do
+    echo "Reviewing $file..."
+    # Use your MCP client to review the file with project guidelines
+done
+```
+
+**CI/CD Integration:**
+
+```yaml
+# Example GitHub Actions workflow
+- name: Run Code Review
+  run: |
+    echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"code-review","arguments":{"go_code":"$(cat main.go)"}}}' | \
+    ./bin/mcp-go-assistant
+```
+
+---
+
 ### Testing with CLI Client
 
 For testing and development, use the included CLI client:
@@ -177,7 +756,8 @@ For testing and development, use the included CLI client:
 
 ## Usage with LLMs
 
-Once the MCP server is configured with your LLM client (Claude Desktop, Windsurf, etc.), you can interact with it using natural language prompts.
+Once the MCP server is configured with your LLM client (Claude Desktop, Windsurf, etc.),
+you can interact with it using natural language prompts.
 
 ### Go Documentation Queries
 
@@ -493,7 +1073,8 @@ Reference specific sections based on code type:
 
 ```
 
-"Review this database layer code using our guidelines from db-guidelines.md, specifically focusing on:
+"Review this database layer code using our guidelines from db-guidelines.md,
+specifically focusing on:
 
 - Connection management standards
 - Query optimization rules
@@ -526,7 +1107,8 @@ done
 
 ## Custom Guidelines
 
-The code review tool supports custom coding guidelines to enforce your team's specific standards and practices.
+The code review tool supports custom coding guidelines to enforce your team's specific
+standards and practices.
 
 ### Three Ways to Provide Guidelines
 
@@ -623,9 +1205,8 @@ Guidelines can be written in several formats:
 **Natural Language:**
 
 ```markdown
-Functions should be small and focused on a single responsibility.
-Always use meaningful variable names that clearly indicate purpose.
-Avoid deep nesting by using early returns.
+Functions should be small and focused on a single responsibility. Always use meaningful
+variable names that clearly indicate purpose. Avoid deep nesting by using early returns.
 ```
 
 ### Advanced Guidelines Examples
@@ -675,7 +1256,8 @@ func (s *Service) CreateUser(name string) error {
 
 ## Testing
 
-The `tests/` directory contains comprehensive examples and guidelines for testing both tools. See [tests/README.md](tests/README.md) for detailed testing instructions.
+The `tests/` directory contains comprehensive examples and guidelines for testing both
+tools. See [tests/README.md](tests/README.md) for detailed testing instructions.
 
 ### Quick Test Examples
 
@@ -715,7 +1297,8 @@ The server exposes two tools:
   - `go_code` (required): The Go code content to analyze
   - `guidelines_file` (optional): Path to markdown file with coding guidelines
   - `guidelines_content` (optional): Markdown content with coding guidelines
-  - `hint` (optional): Specific focus area for the review (e.g., "performance", "security")
+  - `hint` (optional): Specific focus area for the review (e.g., "performance",
+    "security")
 
 ### Example MCP Requests
 
@@ -771,137 +1354,6 @@ The server exposes two tools:
 }
 ```
 
-## Integration Examples
-
-### Claude Desktop
-
-1. Locate your Claude Desktop config file:
-   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-   - **Linux**: `~/.config/Claude/claude_desktop_config.json`
-
-2. Add the server configuration:
-
-```json
-{
-  "mcpServers": {
-    "go-assistant": {
-      "command": "/full/path/to/mcp-go-assistant/bin/mcp-go-assistant",
-      "args": []
-    }
-  }
-}
-```
-
-3. Restart Claude Desktop
-
-### Windsurf
-
-Windsurf by Codeium supports MCP servers for enhanced AI capabilities:
-
-1. **Via Settings UI**:
-   - Open Windsurf
-   - Go to **Settings** → **Extensions** → **MCP Servers**
-   - Click **Add Server**
-   - Configure:
-     - **Name**: `Go Documentation`
-     - **Command**: `/full/path/to/mcp-go-assistant/bin/mcp-go-assistant`
-     - **Transport**: `stdio`
-   - Save and restart Windsurf
-
-2. **Via Configuration File** (if supported):
-
-   Locate Windsurf's config file:
-   - **macOS**: `~/Library/Application Support/Windsurf/mcp_config.json`
-   - **Windows**: `%APPDATA%\Windsurf\mcp_config.json`
-   - **Linux**: `~/.config/windsurf/mcp_config.json`
-
-   Add the server configuration:
-
-   ```json
-   {
-     "mcpServers": {
-       "go-assistant": {
-         "command": "/full/path/to/mcp-go-assistant/bin/mcp-go-assistant",
-         "args": [],
-         "description": "Go development assistant server"
-       }
-     }
-   }
-   ```
-
-3. **Usage in Windsurf**:
-   Once configured, you can ask Windsurf questions like:
-   - "Show me the documentation for the fmt package"
-   - "What does fmt.Printf do?"
-   - "Review this Go code for best practices: [paste code]"
-   - "Analyze this function for performance issues: [paste code]"
-
-### Other MCP Clients
-
-This server can be integrated with any MCP-compatible client by configuring:
-
-- **Command**: Path to the `mcp-go-assistant` binary
-- **Transport**: `stdio`
-- **Protocol**: MCP 2024-11-05
-
-### Client-Specific Usage Tips
-
-#### Claude Desktop
-
-After configuration, you can seamlessly ask:
-
-- "Get Go documentation for any package or function"
-- "Review my Go code and suggest improvements"
-- "Check this code for security issues"
-
-**Example Conversation:**
-
-```
-You: "Show me how to use sync.WaitGroup"
-
-Claude: I'll get the documentation for sync.WaitGroup for you.
-[Uses go-doc tool to fetch documentation]
-
-Here's how to use sync.WaitGroup...
-```
-
-#### Windsurf
-
-Windsurf integrates the tools into its development workflow:
-
-- Code review suggestions appear in the editor
-- Documentation is accessible via chat
-- Guidelines can be enforced during development
-
-**Example Usage:**
-
-```
-You: "Review this function I just wrote and suggest improvements"
-[Select code in editor]
-
-Windsurf: I'll analyze your code for best practices.
-[Uses code-review tool]
-
-I found several areas for improvement...
-```
-
-#### Cursor/VS Code
-
-With MCP extensions, you can:
-
-- Get documentation without leaving the editor
-- Receive real-time code review feedback
-- Apply custom guidelines to your projects
-
-#### Other AI Development Tools
-
-The server works with any MCP-compatible tool:
-
-- **Continue**: Code review in VS Code
-- **Aider**: Documentation and code analysis
-- **Custom integrations**: Build your own tools
-
 ## Troubleshooting
 
 ### Common Issues
@@ -923,4 +1375,3 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 - Go 1.24.0 or later
 - Access to Go documentation (standard library and installed packages)
 - MCP-compatible client application
-
