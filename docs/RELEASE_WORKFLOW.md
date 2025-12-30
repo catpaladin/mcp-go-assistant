@@ -1,17 +1,17 @@
 # Release Workflow
 
-This project uses automated semantic versioning and release management powered by [semantic-release](https://github.com/semantic-release/semantic-release).
+This project uses automated semantic versioning and release management powered by [GoReleaser](https://goreleaser.com/) and conventional commits.
 
 ## How It Works
 
 When you merge a pull request to `main`, the release workflow automatically:
 
-1. Analyzes commits using conventional commits
+1. Analyzes commits using conventional commits (via `scripts/tag-release.sh`)
 2. Determines the next version (major/minor/patch) based on commit types
-3. Updates `CHANGELOG.md` with release notes
-4. Creates a Git tag (`vX.Y.Z`)
-5. Creates a GitHub release with auto-generated release notes
-6. Commits changes back to the repository
+3. Runs GoReleaser to build binaries for multiple platforms
+4. Creates a GitHub release with auto-generated release notes and binaries
+5. Creates a Git tag (`vX.Y.Z`)
+6. Updates `CHANGELOG.md` with release notes
 
 ## Conventional Commits
 
@@ -84,10 +84,20 @@ The release workflow is triggered on pushes to `main` branch.
 
 ### Steps
 
-1. **Checkout**: Fetches full git history
-2. **Install semantic-release**: Installs necessary packages
-3. **Run semantic-release**: Analyzes commits and creates release
-4. **Summary**: Comments on the commit with release information
+1. **Version Determination**: Analyzes commits using `scripts/tag-release.sh`
+2. **GoReleaser Build**: Builds cross-platform binaries
+3. **Create Release**: Publishes GitHub release with binaries and checksums
+4. **Create Tag**: Tags the commit with semantic version
+5. **Update Changelog**: Updates CHANGELOG.md with release notes
+
+### GoReleaser Configuration
+
+The `.goreleaser.yml` file configures:
+- Multi-platform builds (Linux, macOS, Windows on amd64/arm64)
+- Multiple binaries (mcp-go-assistant, client, review-client)
+- Automatic checksum generation
+- Optional GPG signing (requires `GPG_FINGERPRINT` secret)
+- Release notes generated from commit messages
 
 ### Manual Release
 
@@ -141,17 +151,21 @@ Release notes are auto-generated from commit messages and include:
 
 ### Release Configuration
 
-- `.releaserc.json` - semantic-release configuration
-- `.commitlintrc.js` - Commitlint configuration for linting commit messages
-- `package.json` - Node.js dependencies for release tooling
+- `.goreleaser.yml` - GoReleaser configuration for builds and releases
+- `scripts/tag-release.sh` - Bash script for version calculation
+- `.github/workflows/release.yml` - GitHub Actions workflow
 
 ### Customization
 
 To customize the release behavior:
 
-1. Edit `.releaserc.json` for release rules
-2. Edit `.commitlintrc.js` for commit message rules
-3. Update scopes in `.commitlintrc.js` to match your project structure
+1. Edit `.goreleaser.yml` for build configuration:
+   - Add/remove target platforms
+   - Configure build flags and ldflags
+   - Adjust archive formats
+   - Enable/disable GPG signing
+2. Edit `scripts/tag-release.sh` to modify version calculation rules
+3. Update `CHANGELOG.md` template in the workflow if needed
 
 ## Troubleshooting
 
@@ -179,13 +193,26 @@ If semantic-release tries to push but fails:
 
 1. **Write good commit messages**: Use conventional commits consistently
 2. **Review before merging**: Check commit messages in PRs
-3. **Test locally**: Use commitlint to validate commit messages
+3. **Test locally**: Use `scripts/tag-release.sh` with `DRY_RUN=true` to preview version
 4. **Monitor releases**: Check GitHub releases for unexpected versions
 5. **Keep changelog up to date**: The auto-generated changelog is the source of truth
+
+### Local Testing
+
+Test version calculation locally:
+
+```bash
+# Dry run to see what version would be created
+DRY_RUN=true ./scripts/tag-release.sh
+
+# Actually create a local tag (for testing)
+./scripts/tag-release.sh main
+```
 
 ## Resources
 
 - [Conventional Commits](https://www.conventionalcommits.org/)
-- [Semantic Release](https://semantic-release.gitbook.io/semantic-release/)
+- [GoReleaser](https://goreleaser.com/)
+- [GoReleaser Documentation](https://goreleaser.com/introduction/)
 - [Keep a Changelog](https://keepachangelog.com/)
 - [Semantic Versioning](https://semver.org/)

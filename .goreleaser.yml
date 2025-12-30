@@ -1,0 +1,144 @@
+project_name: mcp-go-assistant
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+    - go mod verify
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser'
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    binary: '{{ .ProjectName }}'
+    main: ./cmd/mcp-go-assistant
+
+  - env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser'
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    binary: client
+    main: ./cmd/client
+
+  - env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser'
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    binary: review-client
+    main: ./cmd/review-client
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}-
+      {{- .Tag }}-
+      {{- .Os }}-
+      {{- .Arch }}
+    files:
+      - LICENSE
+      - README.md
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Tag }}_checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - '^style:'
+
+signs:
+  - artifacts: checksum
+    args:
+      - "--batch"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+
+release:
+  github:
+    owner: catnobanana
+    name: mcp-go-assistant
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## mcp-go-assistant {{ .Tag }} Release
+
+    This release includes the following changes:
+
+  footer: |
+    ## Installation
+
+    ### Using Homebrew
+    ```bash
+    brew install catnobanana/tap/mcp-go-assistant
+    ```
+
+    ### Using Go install
+    ```bash
+    go install github.com/catnobanana/mcp-go-assistant/cmd/mcp-go-assistant@{{ .Tag }}
+    ```
+
+    ### Binary Download
+
+    Download the appropriate binary for your platform from the assets below.
+
+    ## Verification
+
+    Verify the downloaded binary using the checksums file:
+
+    ```bash
+    # Linux/macOS
+    sha256sum -c mcp-go-assistant_{{ .Tag }}_checksums.txt
+
+    # Windows
+    certutil -hashfile mcp-go-assistant_{{ .Tag }}_checksums.txt SHA256
+    ```
+
+    Full Changelog: https://github.com/catnobanana/mcp-go-assistant/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"

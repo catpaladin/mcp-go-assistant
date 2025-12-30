@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Automated release workflow with semantic-release
+- Automated release workflow with GoReleaser
 - GitHub Actions workflow for version tagging and releases on main branch merges
-- Conventional commits configuration for automated release notes
+- Bash script for semantic version calculation based on conventional commits
 
 ### Changed
-- Improved release management with automated version tagging
+- Improved release management with automated version tagging using Go tooling
 
 ### Security
 - N/A
