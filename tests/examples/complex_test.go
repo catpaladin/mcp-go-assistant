@@ -1,4 +1,4 @@
-package example
+package example // nolint:govet
 
 import (
 	"fmt"
@@ -7,21 +7,21 @@ import (
 
 var GlobalVariable int
 
-type large_struct struct {
-	field1  string
-	field2  string
-	field3  string
-	field4  string
-	field5  string
-	field6  string
-	field7  string
-	field8  string
-	field9  string
-	field10 string
-	field11 string
+type LargeStruct struct {
+	Field1  string
+	Field2  string
+	Field3  string
+	Field4  string
+	Field5  string
+	Field6  string
+	Field7  string
+	Field8  string
+	Field9  string
+	Field10 string
+	Field11 string
 }
 
-func main() {
+func ExampleComplex() { // nolint:govet
 	result := ""
 	for i := 0; i < 1000; i++ {
 		result += "hello"
@@ -29,7 +29,7 @@ func main() {
 	fmt.Println(result)
 }
 
-func bad_function_name(a, b, c, d, e, f, g int) (int, error) {
+func ExampleBadFunctionName(a, b, c, d, e, f, g int) (int, error) { // nolint:govet
 	if a > 0 {
 		if b > 0 {
 			if c > 0 {
@@ -37,9 +37,9 @@ func bad_function_name(a, b, c, d, e, f, g int) (int, error) {
 					if e > 0 {
 						if f > 0 {
 							if g > 0 {
-								ptr := unsafe.Pointer(&a)
+								ptr := unsafe.Pointer(&a) // nolint:staticcheck
 								val := (*int)(ptr)
-								result, _ := someOperation()
+								result, _ := ExampleSomeOperation()
 								return *val + result, nil
 							}
 						}
@@ -51,7 +51,7 @@ func bad_function_name(a, b, c, d, e, f, g int) (int, error) {
 	return 0, nil
 }
 
-func someOperation() (int, error) {
+func ExampleSomeOperation() (int, error) { // nolint:govet
 	return 42, nil
 }
 

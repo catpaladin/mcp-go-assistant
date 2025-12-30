@@ -231,8 +231,7 @@ func (a *Analyzer) checkComments(file *ast.File, result *ReviewResult) {
 // checkErrorHandling verifies error handling patterns
 func (a *Analyzer) checkErrorHandling(file *ast.File, result *ReviewResult) {
 	ast.Inspect(file, func(n ast.Node) bool {
-		switch node := n.(type) {
-		case *ast.CallExpr:
+		if node, ok := n.(*ast.CallExpr); ok {
 			// Check for ignored errors
 			if parent, ok := findParentAssign(file, node); ok {
 				if assign, ok := parent.(*ast.AssignStmt); ok {
@@ -244,7 +243,7 @@ func (a *Analyzer) checkErrorHandling(file *ast.File, result *ReviewResult) {
 									Category:   "error-handling",
 									Line:       a.getLine(node.Pos()),
 									Message:    "Error is being ignored",
-									Suggestion: "Handle the error appropriately",
+									Suggestion: "Handle error appropriately",
 									Severity:   "high",
 									Rule:       "error-handling",
 								})
@@ -261,8 +260,7 @@ func (a *Analyzer) checkErrorHandling(file *ast.File, result *ReviewResult) {
 // checkPerformance identifies performance issues
 func (a *Analyzer) checkPerformance(file *ast.File, result *ReviewResult) {
 	ast.Inspect(file, func(n ast.Node) bool {
-		switch node := n.(type) {
-		case *ast.RangeStmt:
+		if node, ok := n.(*ast.RangeStmt); ok {
 			// Check for string concatenation in loops
 			ast.Inspect(node.Body, func(inner ast.Node) bool {
 				if binExpr, ok := inner.(*ast.BinaryExpr); ok {
@@ -288,8 +286,7 @@ func (a *Analyzer) checkPerformance(file *ast.File, result *ReviewResult) {
 // checkSecurity identifies potential security issues
 func (a *Analyzer) checkSecurity(file *ast.File, result *ReviewResult) {
 	ast.Inspect(file, func(n ast.Node) bool {
-		switch node := n.(type) {
-		case *ast.CallExpr:
+		if node, ok := n.(*ast.CallExpr); ok {
 			if sel, ok := node.Fun.(*ast.SelectorExpr); ok {
 				if ident, ok := sel.X.(*ast.Ident); ok {
 					// Check for unsafe operations

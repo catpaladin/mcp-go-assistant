@@ -1,6 +1,7 @@
 package codereview
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -88,7 +89,7 @@ func test() {}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := PerformCodeReview(nil, tt.params)
+			result, err := PerformCodeReview(context.TODO(), tt.params)
 
 			if tt.wantErr {
 				if err == nil {
@@ -132,7 +133,7 @@ func TestPerformCodeReview_WithGuidelinesFile(t *testing.T) {
 - Handle errors properly
 `
 
-	if err := os.WriteFile(guidelinesFile, []byte(guidelinesContent), 0644); err != nil {
+	if err := os.WriteFile(guidelinesFile, []byte(guidelinesContent), 0600); err != nil {
 		t.Fatalf("failed to create guidelines file: %v", err)
 	}
 
@@ -145,7 +146,7 @@ func test() {}
 		GuidelinesFile: guidelinesFile,
 	}
 
-	result, err := PerformCodeReview(nil, params)
+	result, err := PerformCodeReview(nil, params) // nolint:staticcheck
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -162,7 +163,7 @@ func TestPerformCodeReview_WithInvalidGuidelinesFile(t *testing.T) {
 		GuidelinesFile: "/nonexistent/guidelines.md",
 	}
 
-	_, err := PerformCodeReview(nil, params)
+	_, err := PerformCodeReview(context.TODO(), params)
 
 	if err == nil {
 		t.Error("expected error for nonexistent guidelines file")
@@ -227,7 +228,8 @@ func test() {}
 				Hint: tt.hint,
 			}
 
-			result, err := PerformCodeReview(nil, params)
+			result, err := PerformCodeReview(context.TODO(), params)
+
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -522,7 +524,7 @@ func main() {
 		Hint:   "error handling and performance",
 	}
 
-	result, err := PerformCodeReview(nil, params)
+	result, err := PerformCodeReview(nil, params) // nolint:staticcheck
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

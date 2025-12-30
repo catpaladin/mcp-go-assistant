@@ -1,13 +1,13 @@
-package example
+package example // nolint:govet
 
 import "fmt"
 
 func ExampleTestCode() {
-	var name string = "world"
+	name := "world"
 	fmt.Printf("Hello %s\n", name)
 }
 
-func badFunction(a, b, c, d, e, f int) int {
+func ExampleBadFunction(a, b, c, d, e, f int) int {
 	if a > 0 {
 		if b > 0 {
 			if c > 0 {

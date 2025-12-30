@@ -19,7 +19,7 @@ func TempDir(t *testing.T) string {
 	}
 
 	t.Cleanup(func() {
-		os.RemoveAll(dir)
+		_ = os.RemoveAll(dir)
 	})
 
 	return dir
@@ -30,7 +30,7 @@ func TempFile(t *testing.T, dir, name, content string) string {
 	t.Helper()
 
 	path := filepath.Join(dir, name)
-	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
 
@@ -94,11 +94,11 @@ func CaptureOutput(fn func()) string {
 
 	fn()
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = old
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	return buf.String()
 }
 
@@ -117,9 +117,9 @@ func SetupEnv(t *testing.T, envVars map[string]string) func() {
 	return func() {
 		for key, oldValue := range oldValues {
 			if oldValue == "" {
-				os.Unsetenv(key)
+				_ = os.Unsetenv(key)
 			} else {
-				os.Setenv(key, oldValue)
+				_ = os.Setenv(key, oldValue)
 			}
 		}
 	}

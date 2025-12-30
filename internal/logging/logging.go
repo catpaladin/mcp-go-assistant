@@ -29,11 +29,12 @@ func New(level string, format string, outputPath string, noColor bool) (*Logger,
 
 	// Configure output writer
 	var output io.Writer
-	if outputPath == "" || outputPath == "stdout" {
+	switch outputPath {
+	case "", "stdout":
 		output = os.Stdout
-	} else if outputPath == "stderr" {
+	case "stderr":
 		output = os.Stderr
-	} else {
+	default:
 		file, err := os.OpenFile(outputPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open log file: %w", err)

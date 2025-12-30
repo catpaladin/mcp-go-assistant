@@ -93,9 +93,9 @@ func TestNew_WithFileOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	logger, err := New("info", "json", tmpFile.Name(), false)
 	if err != nil {
@@ -225,7 +225,7 @@ func TestLogger_LogLevels(t *testing.T) {
 	// Note: This is a simplified test as zerolog doesn't easily support output redirection after creation
 	// In real testing, we'd use zerolog's test utilities
 
-	t.Run("trace", func(t *testing.T) {
+	t.Run("trace", func(_ *testing.T) {
 		logger.Trace("trace message")
 	})
 

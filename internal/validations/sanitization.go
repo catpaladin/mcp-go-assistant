@@ -16,7 +16,7 @@ func SanitizeCode(code string) (string, error) {
 
 	// Trim excessive whitespace
 	lines := strings.Split(sanitized, "\n")
-	var cleanLines []string
+	cleanLines := make([]string, 0, len(lines))
 	for _, line := range lines {
 		trimmed := strings.TrimRight(line, " \t")
 		cleanLines = append(cleanLines, trimmed)

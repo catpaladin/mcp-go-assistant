@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+const (
+	// goIdentifierPattern is the regex pattern for valid Go identifiers
+	goIdentifierPattern = `^[a-zA-Z_][a-zA-Z0-9_]*$`
+)
+
 // ValidationRule defines the interface for validation rules
 type ValidationRule interface {
 	Validate(value interface{}) error
@@ -208,8 +213,7 @@ func (r *SymbolNameRule) Validate(value interface{}) error {
 
 	// Validate symbol name format
 	// Go identifiers: start with letter or underscore, followed by letters, digits, or underscores
-	pattern := `^[a-zA-Z_][a-zA-Z0-9_]*$`
-	if !regexp.MustCompile(pattern).MatchString(str) {
+	if !regexp.MustCompile(goIdentifierPattern).MatchString(str) {
 		return fmt.Errorf("invalid Go symbol name: %s", str)
 	}
 

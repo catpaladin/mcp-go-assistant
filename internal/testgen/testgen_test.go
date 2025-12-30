@@ -1,6 +1,7 @@
 package testgen
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
@@ -76,7 +77,7 @@ func TestFunction() {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := GenerateTests(nil, tt.params)
+			result, err := GenerateTests(context.TODO(), tt.params)
 
 			if tt.wantErr {
 				if err == nil {
@@ -116,7 +117,7 @@ func TestGenerateTests_DefaultPackageName(t *testing.T) {
 		GoCode: code,
 	}
 
-	result, err := GenerateTests(nil, params)
+	result, err := GenerateTests(context.TODO(), params)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -148,7 +149,7 @@ func (s *Service) Method3(a, b int) (string, error) { return "", nil }
 		Focus:       "interfaces",
 	}
 
-	result, err := GenerateTests(nil, params)
+	result, err := GenerateTests(context.TODO(), params)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -206,7 +207,7 @@ func Function3(a string) int { return 0 }
 		PackageName: "testpkg",
 	}
 
-	result, err := GenerateTests(nil, params)
+	result, err := GenerateTests(context.TODO(), params)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -256,7 +257,7 @@ func ProcessData(s string) error {
 		Focus:       "table",
 	}
 
-	result, err := GenerateTests(nil, params)
+	result, err := GenerateTests(context.TODO(), params)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -290,7 +291,7 @@ func unexportedFunction() {}
 		GoCode: code,
 	}
 
-	result, err := GenerateTests(nil, params)
+	result, err := GenerateTests(context.TODO(), params)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -319,7 +320,7 @@ type MyType struct {
 		Focus:  "interfaces",
 	}
 
-	result, err := GenerateTests(nil, params)
+	result, err := GenerateTests(context.TODO(), params)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -351,7 +352,7 @@ func (m *MyStruct) Method2() {}
 		Focus:  "interfaces",
 	}
 
-	result, err := GenerateTests(nil, params)
+	result, err := GenerateTests(context.TODO(), params)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -380,7 +381,7 @@ func Function(a string, b int, c bool) error {
 		Focus:  "table",
 	}
 
-	result, err := GenerateTests(nil, params)
+	result, err := GenerateTests(context.TODO(), params)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -416,7 +417,7 @@ func Function(a []string, b map[string]int, c chan error) {
 		Focus:  "table",
 	}
 
-	result, err := GenerateTests(nil, params)
+	result, err := GenerateTests(context.TODO(), params)
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -453,7 +454,7 @@ func (s *Service) Method() {}
 				Focus:  focus,
 			}
 
-			result, err := GenerateTests(nil, params)
+			result, err := GenerateTests(context.TODO(), params)
 
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)

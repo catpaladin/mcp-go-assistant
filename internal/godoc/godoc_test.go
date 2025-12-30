@@ -255,7 +255,7 @@ func TestGetDocumentation_LongTimeout(t *testing.T) {
 	}
 }
 
-func TestGetDocumentation_Concurrent(t *testing.T) {
+func TestGetDocumentation_Concurrent(_ *testing.T) {
 	packages := []string{
 		"fmt",
 		"strings",

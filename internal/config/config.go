@@ -9,6 +9,7 @@ import (
 	"mcp-go-assistant/internal/circuitbreaker"
 	"mcp-go-assistant/internal/ratelimit"
 	"mcp-go-assistant/internal/retry"
+	versionpkg "mcp-go-assistant/internal/version"
 
 	"github.com/spf13/viper"
 )
@@ -174,7 +175,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Server: ServerConfig{
 			Name:         "mcp-go-assistant",
-			Version:      "1.2.0",
+			Version:      versionpkg.Version,
 			Host:         "0.0.0.0",
 			Port:         8080,
 			ReadTimeout:  30 * time.Second,
@@ -466,69 +467,69 @@ func setDefaults(v *viper.Viper) {
 // bindEnvVars binds environment variables to config keys
 func bindEnvVars(v *viper.Viper) {
 	// Server
-	v.BindEnv("server.host", "MCP_HOST")
-	v.BindEnv("server.port", "MCP_PORT")
-	v.BindEnv("server.read_timeout", "MCP_READ_TIMEOUT")
-	v.BindEnv("server.write_timeout", "MCP_WRITE_TIMEOUT")
+	_ = v.BindEnv("server.host", "MCP_HOST")
+	_ = v.BindEnv("server.port", "MCP_PORT")
+	_ = v.BindEnv("server.read_timeout", "MCP_READ_TIMEOUT")
+	_ = v.BindEnv("server.write_timeout", "MCP_WRITE_TIMEOUT")
 
 	// Logging
-	v.BindEnv("logging.level", "MCP_LOG_LEVEL")
-	v.BindEnv("logging.format", "MCP_LOG_FORMAT")
-	v.BindEnv("logging.output_path", "MCP_LOG_OUTPUT")
-	v.BindEnv("logging.no_color", "MCP_LOG_NO_COLOR")
+	_ = v.BindEnv("logging.level", "MCP_LOG_LEVEL")
+	_ = v.BindEnv("logging.format", "MCP_LOG_FORMAT")
+	_ = v.BindEnv("logging.output_path", "MCP_LOG_OUTPUT")
+	_ = v.BindEnv("logging.no_color", "MCP_LOG_NO_COLOR")
 
 	// Metrics
-	v.BindEnv("metrics.enabled", "MCP_METRICS_ENABLED")
-	v.BindEnv("metrics.path", "MCP_METRICS_PATH")
+	_ = v.BindEnv("metrics.enabled", "MCP_METRICS_ENABLED")
+	_ = v.BindEnv("metrics.path", "MCP_METRICS_PATH")
 
 	// Tools
-	v.BindEnv("tools.godoc_timeout", "MCP_GODOC_TIMEOUT")
-	v.BindEnv("tools.code_review_timeout", "MCP_CODE_REVIEW_TIMEOUT")
-	v.BindEnv("tools.test_gen_timeout", "MCP_TEST_GEN_TIMEOUT")
+	_ = v.BindEnv("tools.godoc_timeout", "MCP_GODOC_TIMEOUT")
+	_ = v.BindEnv("tools.code_review_timeout", "MCP_CODE_REVIEW_TIMEOUT")
+	_ = v.BindEnv("tools.test_gen_timeout", "MCP_TEST_GEN_TIMEOUT")
 
 	// Circuit breaker settings
-	v.BindEnv("tools.godoc_circuit_breaker.max_failures", "MCP_GODOC_CB_MAX_FAILURES")
-	v.BindEnv("tools.godoc_circuit_breaker.timeout", "MCP_GODOC_CB_TIMEOUT")
-	v.BindEnv("tools.godoc_circuit_breaker.max_half_open_requests", "MCP_GODOC_CB_MAX_HALF_OPEN")
-	v.BindEnv("tools.code_review_circuit_breaker.max_failures", "MCP_CODE_REVIEW_CB_MAX_FAILURES")
-	v.BindEnv("tools.code_review_circuit_breaker.timeout", "MCP_CODE_REVIEW_CB_TIMEOUT")
-	v.BindEnv("tools.code_review_circuit_breaker.max_half_open_requests", "MCP_CODE_REVIEW_CB_MAX_HALF_OPEN")
-	v.BindEnv("tools.test_gen_circuit_breaker.max_failures", "MCP_TEST_GEN_CB_MAX_FAILURES")
-	v.BindEnv("tools.test_gen_circuit_breaker.timeout", "MCP_TEST_GEN_CB_TIMEOUT")
-	v.BindEnv("tools.test_gen_circuit_breaker.max_half_open_requests", "MCP_TEST_GEN_CB_MAX_HALF_OPEN")
+	_ = v.BindEnv("tools.godoc_circuit_breaker.max_failures", "MCP_GODOC_CB_MAX_FAILURES")
+	_ = v.BindEnv("tools.godoc_circuit_breaker.timeout", "MCP_GODOC_CB_TIMEOUT")
+	_ = v.BindEnv("tools.godoc_circuit_breaker.max_half_open_requests", "MCP_GODOC_CB_MAX_HALF_OPEN")
+	_ = v.BindEnv("tools.code_review_circuit_breaker.max_failures", "MCP_CODE_REVIEW_CB_MAX_FAILURES")
+	_ = v.BindEnv("tools.code_review_circuit_breaker.timeout", "MCP_CODE_REVIEW_CB_TIMEOUT")
+	_ = v.BindEnv("tools.code_review_circuit_breaker.max_half_open_requests", "MCP_CODE_REVIEW_CB_MAX_HALF_OPEN")
+	_ = v.BindEnv("tools.test_gen_circuit_breaker.max_failures", "MCP_TEST_GEN_CB_MAX_FAILURES")
+	_ = v.BindEnv("tools.test_gen_circuit_breaker.timeout", "MCP_TEST_GEN_CB_TIMEOUT")
+	_ = v.BindEnv("tools.test_gen_circuit_breaker.max_half_open_requests", "MCP_TEST_GEN_CB_MAX_HALF_OPEN")
 
 	// Timeouts
-	v.BindEnv("timeouts.default", "MCP_TIMEOUT_DEFAULT")
-	v.BindEnv("timeouts.shutdown", "MCP_TIMEOUT_SHUTDOWN")
-	v.BindEnv("timeouts.request", "MCP_TIMEOUT_REQUEST")
-	v.BindEnv("timeouts.grace_period", "MCP_TIMEOUT_GRACE_PERIOD")
+	_ = v.BindEnv("timeouts.default", "MCP_TIMEOUT_DEFAULT")
+	_ = v.BindEnv("timeouts.shutdown", "MCP_TIMEOUT_SHUTDOWN")
+	_ = v.BindEnv("timeouts.request", "MCP_TIMEOUT_REQUEST")
+	_ = v.BindEnv("timeouts.grace_period", "MCP_TIMEOUT_GRACE_PERIOD")
 
 	// Validations
-	v.BindEnv("validations.max_input_size", "MCP_VALIDATION_MAX_INPUT_SIZE")
-	v.BindEnv("validations.allowed_chars", "MCP_VALIDATION_ALLOWED_CHARS")
+	_ = v.BindEnv("validations.max_input_size", "MCP_VALIDATION_MAX_INPUT_SIZE")
+	_ = v.BindEnv("validations.allowed_chars", "MCP_VALIDATION_ALLOWED_CHARS")
 
 	// Rate limiting
-	v.BindEnv("rate_limit.enabled", "MCP_RATELIMIT_ENABLED")
-	v.BindEnv("rate_limit.limit", "MCP_RATELIMIT_LIMIT")
-	v.BindEnv("rate_limit.window", "MCP_RATELIMIT_WINDOW")
-	v.BindEnv("rate_limit.mode", "MCP_RATELIMIT_MODE")
-	v.BindEnv("rate_limit.algorithm", "MCP_RATELIMIT_ALGORITHM")
-	v.BindEnv("rate_limit.store_type", "MCP_RATELIMIT_STORE_TYPE")
+	_ = v.BindEnv("rate_limit.enabled", "MCP_RATELIMIT_ENABLED")
+	_ = v.BindEnv("rate_limit.limit", "MCP_RATELIMIT_LIMIT")
+	_ = v.BindEnv("rate_limit.window", "MCP_RATELIMIT_WINDOW")
+	_ = v.BindEnv("rate_limit.mode", "MCP_RATELIMIT_MODE")
+	_ = v.BindEnv("rate_limit.algorithm", "MCP_RATELIMIT_ALGORITHM")
+	_ = v.BindEnv("rate_limit.store_type", "MCP_RATELIMIT_STORE_TYPE")
 
 	// Error handling
-	v.BindEnv("error_handling.verbosity", "MCP_ERROR_VERBOSITY")
-	v.BindEnv("error_handling.include_stack", "MCP_ERROR_INCLUDE_STACK")
-	v.BindEnv("error_handling.response_format", "MCP_ERROR_RESPONSE_FORMAT")
-	v.BindEnv("error_handling.expose_details", "MCP_ERROR_EXPOSE_DETAILS")
-	v.BindEnv("error_handling.log_all_errors", "MCP_ERROR_LOG_ALL")
-	v.BindEnv("error_handling.track_metrics", "MCP_ERROR_TRACK_METRICS")
+	_ = v.BindEnv("error_handling.verbosity", "MCP_ERROR_VERBOSITY")
+	_ = v.BindEnv("error_handling.include_stack", "MCP_ERROR_INCLUDE_STACK")
+	_ = v.BindEnv("error_handling.response_format", "MCP_ERROR_RESPONSE_FORMAT")
+	_ = v.BindEnv("error_handling.expose_details", "MCP_ERROR_EXPOSE_DETAILS")
+	_ = v.BindEnv("error_handling.log_all_errors", "MCP_ERROR_LOG_ALL")
+	_ = v.BindEnv("error_handling.track_metrics", "MCP_ERROR_TRACK_METRICS")
 
 	// Retry
-	v.BindEnv("retry.enabled", "MCP_RETRY_ENABLED")
-	v.BindEnv("retry.max_attempts", "MCP_RETRY_MAX_ATTEMPTS")
-	v.BindEnv("retry.initial_delay", "MCP_RETRY_INITIAL_DELAY")
-	v.BindEnv("retry.max_delay", "MCP_RETRY_MAX_DELAY")
-	v.BindEnv("retry.multiplier", "MCP_RETRY_MULTIPLIER")
-	v.BindEnv("retry.jitter", "MCP_RETRY_JITTER")
-	v.BindEnv("retry.strategy", "MCP_RETRY_STRATEGY")
+	_ = v.BindEnv("retry.enabled", "MCP_RETRY_ENABLED")
+	_ = v.BindEnv("retry.max_attempts", "MCP_RETRY_MAX_ATTEMPTS")
+	_ = v.BindEnv("retry.initial_delay", "MCP_RETRY_INITIAL_DELAY")
+	_ = v.BindEnv("retry.max_delay", "MCP_RETRY_MAX_DELAY")
+	_ = v.BindEnv("retry.multiplier", "MCP_RETRY_MULTIPLIER")
+	_ = v.BindEnv("retry.jitter", "MCP_RETRY_JITTER")
+	_ = v.BindEnv("retry.strategy", "MCP_RETRY_STRATEGY")
 }

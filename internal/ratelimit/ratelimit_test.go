@@ -497,14 +497,14 @@ func setEnv(key, value string) string {
 	if val, exists := os.LookupEnv(key); exists {
 		orig = val
 	}
-	os.Setenv(key, value)
+	_ = os.Setenv(key, value)
 	return orig
 }
 
 func unsetEnv(key, orig string) {
 	if orig != "" {
-		os.Setenv(key, orig)
+		_ = os.Setenv(key, orig)
 	} else {
-		os.Unsetenv(key)
+		_ = os.Unsetenv(key)
 	}
 }

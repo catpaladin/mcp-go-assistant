@@ -504,9 +504,9 @@ func TestConcurrency(t *testing.T) {
 	// Run concurrent validations
 	for i := 0; i < 100; i++ {
 		go func() {
-			v.ValidateInput("test", "not_empty")
-			v.ValidatePackagePath("fmt")
-			v.ValidateFilePath("test.go")
+			_ = v.ValidateInput("test", "not_empty")
+			_ = v.ValidatePackagePath("fmt")
+			_ = v.ValidateFilePath("test.go")
 			done <- true
 		}()
 	}
@@ -520,13 +520,12 @@ func TestConcurrency(t *testing.T) {
 // TestIsValidationError tests the IsValidationError helper
 func TestIsValidationError(t *testing.T) {
 	vErr := NewValidationError("field", "rule", "value", "test error")
-	var otherErr error = nil
 
 	if !IsValidationError(vErr) {
 		t.Error("expected ValidationError to be detected")
 	}
 
-	if IsValidationError(otherErr) {
+	if IsValidationError(nil) {
 		t.Error("expected non-ValidationError to not be detected")
 	}
 }

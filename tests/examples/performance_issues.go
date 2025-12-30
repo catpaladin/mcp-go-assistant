@@ -1,4 +1,4 @@
-package example
+package example // nolint:govet
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ func ExamplePerformanceIssues() {
 	fmt.Println(result)
 }
 
-func inefficientStringBuilding(items []string) string {
+func ExampleInefficientStringBuilding(items []string) string {
 	result := ""
 	for _, item := range items {
 		result = result + item + ","
@@ -22,7 +22,7 @@ func inefficientStringBuilding(items []string) string {
 	return result
 }
 
-func betterStringBuilding(items []string) string {
+func ExampleBetterStringBuilding(items []string) string {
 	var builder strings.Builder
 	for _, item := range items {
 		builder.WriteString(item)
@@ -31,7 +31,7 @@ func betterStringBuilding(items []string) string {
 	return builder.String()
 }
 
-func veryLongFunctionThatShouldBeBrokenDown(
+func ExampleVeryLongFunctionThatShouldBeBrokenDown(
 	param1 string,
 	param2 string,
 	param3 string,

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -20,6 +21,7 @@ import (
 	"mcp-go-assistant/internal/testgen"
 	"mcp-go-assistant/internal/types"
 	"mcp-go-assistant/internal/validations"
+	versionpkg "mcp-go-assistant/internal/version"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -31,6 +33,8 @@ const (
 )
 
 var (
+	showVersion              bool
+	showFullVersion          bool
 	cfg                      *config.Config
 	logger                   *logging.Logger
 	metricsCol               *metrics.Metrics
@@ -46,8 +50,20 @@ var (
 	testGenRetryWrapper      *retry.RetryWrapper
 )
 
-// GoDocTool handles the go-doc tool invocation
-func GoDocTool(ctx context.Context, request *mcp.CallToolRequest, params godoc.GoDocParams) (*mcp.CallToolResult, any, error) {
+// printVersion prints the version to stdout
+func printVersion() {
+	versionInfo := versionpkg.GetVersionInfo()
+	fmt.Println(versionInfo.String())
+}
+
+// printFullVersion prints detailed version information
+func printFullVersion() {
+	versionInfo := versionpkg.GetVersionInfo()
+	fmt.Println(versionInfo.FullString())
+}
+
+// GoDocTool handles the go-doc tool invocation.
+func GoDocTool(ctx context.Context, _ *mcp.CallToolRequest, params godoc.GoDocParams) (*mcp.CallToolResult, any, error) {
 	startTime := time.Now()
 	log := logger.WithNewRequestID()
 
@@ -62,7 +78,7 @@ func GoDocTool(ctx context.Context, request *mcp.CallToolRequest, params godoc.G
 		if err := rateLimitMiddleware.CheckRateLimit(toolGoDoc, "default"); err != nil {
 			duration := time.Since(startTime)
 			mcpErr := WrapRateLimitError(err, toolGoDoc)
-			LogAndHandleError(log, mcpErr, toolGoDoc, duration)
+			_ = LogAndHandleError(log, mcpErr, toolGoDoc, duration)
 			return nil, nil, mcpErr
 		}
 	}
@@ -77,7 +93,7 @@ func GoDocTool(ctx context.Context, request *mcp.CallToolRequest, params godoc.G
 		log.LogValidationError("package_path", "package_path", params.PackagePath, toolGoDoc)
 		metricsCol.RecordValidationFailure("package_path", toolGoDoc)
 		mcpErr := WrapValidationError(err, toolGoDoc)
-		LogAndHandleError(log, mcpErr, toolGoDoc, time.Since(startTime))
+		_ = LogAndHandleError(log, mcpErr, toolGoDoc, time.Since(startTime))
 		return nil, nil, mcpErr
 	}
 	log.LogValidationSuccess("package_path", "package_path", toolGoDoc)
@@ -90,7 +106,7 @@ func GoDocTool(ctx context.Context, request *mcp.CallToolRequest, params godoc.G
 			log.LogValidationError("symbol_name", "symbol_name", params.SymbolName, toolGoDoc)
 			metricsCol.RecordValidationFailure("symbol_name", toolGoDoc)
 			mcpErr := WrapValidationError(err, toolGoDoc)
-			LogAndHandleError(log, mcpErr, toolGoDoc, time.Since(startTime))
+			_ = LogAndHandleError(log, mcpErr, toolGoDoc, time.Since(startTime))
 			return nil, nil, mcpErr
 		}
 		log.LogValidationSuccess("symbol_name", "symbol_name", toolGoDoc)
@@ -104,7 +120,7 @@ func GoDocTool(ctx context.Context, request *mcp.CallToolRequest, params godoc.G
 			log.LogValidationError("working_dir", "file_path", params.WorkingDir, toolGoDoc)
 			metricsCol.RecordValidationFailure("working_dir", toolGoDoc)
 			mcpErr := WrapValidationError(err, toolGoDoc)
-			LogAndHandleError(log, mcpErr, toolGoDoc, time.Since(startTime))
+			_ = LogAndHandleError(log, mcpErr, toolGoDoc, time.Since(startTime))
 			return nil, nil, mcpErr
 		}
 		log.LogValidationSuccess("working_dir", "file_path", toolGoDoc)
@@ -124,7 +140,7 @@ func GoDocTool(ctx context.Context, request *mcp.CallToolRequest, params godoc.G
 
 		// Use retry logic if configured
 		if goDocRetryWrapper != nil {
-			_, retryErr := goDocRetryWrapper.DoWithData(ctx, func(attempt uint) (interface{}, error) {
+			_, retryErr := goDocRetryWrapper.DoWithData(ctx, func(_ uint) (interface{}, error) {
 				documentation, err = godoc.GetDocumentation(ctx, params)
 				return nil, err
 			})
@@ -143,14 +159,14 @@ func GoDocTool(ctx context.Context, request *mcp.CallToolRequest, params godoc.G
 		var cbOpenErr *circuitbreaker.CircuitBreakerError
 		if errors.As(cbErr, &cbOpenErr) && errors.Is(cbErr, circuitbreaker.ErrCircuitBreakerOpen) {
 			mcpErr := WrapCircuitBreakerError(cbErr, toolGoDoc)
-			LogAndHandleError(log, mcpErr, toolGoDoc, duration)
+			_ = LogAndHandleError(log, mcpErr, toolGoDoc, duration)
 			return nil, nil, mcpErr
 		}
 
 		// Tool execution error - wrap as internal error
 		mcpErr := types.WrapError(cbErr, fmt.Sprintf("failed to get documentation for %s", params.PackagePath))
 		metricsCol.RecordToolCall(toolGoDoc, "error", duration)
-		LogAndHandleError(log, mcpErr, toolGoDoc, duration)
+		_ = LogAndHandleError(log, mcpErr, toolGoDoc, duration)
 		return nil, nil, mcpErr
 	}
 
@@ -165,8 +181,8 @@ func GoDocTool(ctx context.Context, request *mcp.CallToolRequest, params godoc.G
 	}, nil, nil
 }
 
-// CodeReviewTool handles the code-review tool invocation
-func CodeReviewTool(ctx context.Context, request *mcp.CallToolRequest, params codereview.CodeReviewParams) (*mcp.CallToolResult, *codereview.ReviewResult, error) {
+// CodeReviewTool handles the code-review tool invocation.
+func CodeReviewTool(ctx context.Context, _ *mcp.CallToolRequest, params codereview.CodeReviewParams) (*mcp.CallToolResult, *codereview.ReviewResult, error) {
 	startTime := time.Now()
 	log := logger.WithNewRequestID()
 
@@ -180,7 +196,7 @@ func CodeReviewTool(ctx context.Context, request *mcp.CallToolRequest, params co
 		if err := rateLimitMiddleware.CheckRateLimit(toolCodeReview, "default"); err != nil {
 			duration := time.Since(startTime)
 			mcpErr := WrapRateLimitError(err, toolCodeReview)
-			LogAndHandleError(log, mcpErr, toolCodeReview, duration)
+			_ = LogAndHandleError(log, mcpErr, toolCodeReview, duration)
 			return nil, nil, mcpErr
 		}
 	}
@@ -195,7 +211,7 @@ func CodeReviewTool(ctx context.Context, request *mcp.CallToolRequest, params co
 		log.LogValidationError("code", "code_safety", "code", toolCodeReview)
 		metricsCol.RecordValidationFailure("code_safety", toolCodeReview)
 		mcpErr := WrapValidationError(err, toolCodeReview)
-		LogAndHandleError(log, mcpErr, toolCodeReview, time.Since(startTime))
+		_ = LogAndHandleError(log, mcpErr, toolCodeReview, time.Since(startTime))
 		return nil, nil, mcpErr
 	}
 	log.LogValidationSuccess("code", "code_safety", toolCodeReview)
@@ -208,7 +224,7 @@ func CodeReviewTool(ctx context.Context, request *mcp.CallToolRequest, params co
 			log.LogValidationError("hint", "hint", params.Hint, toolCodeReview)
 			metricsCol.RecordValidationFailure("hint", toolCodeReview)
 			mcpErr := WrapValidationError(err, toolCodeReview)
-			LogAndHandleError(log, mcpErr, toolCodeReview, time.Since(startTime))
+			_ = LogAndHandleError(log, mcpErr, toolCodeReview, time.Since(startTime))
 			return nil, nil, mcpErr
 		}
 		log.LogValidationSuccess("hint", "hint", toolCodeReview)
@@ -222,7 +238,7 @@ func CodeReviewTool(ctx context.Context, request *mcp.CallToolRequest, params co
 			log.LogValidationError("guidelines_file", "file_path", params.GuidelinesFile, toolCodeReview)
 			metricsCol.RecordValidationFailure("guidelines_file", toolCodeReview)
 			mcpErr := WrapValidationError(err, toolCodeReview)
-			LogAndHandleError(log, mcpErr, toolCodeReview, time.Since(startTime))
+			_ = LogAndHandleError(log, mcpErr, toolCodeReview, time.Since(startTime))
 			return nil, nil, mcpErr
 		}
 		log.LogValidationSuccess("guidelines_file", "file_path", toolCodeReview)
@@ -240,7 +256,7 @@ func CodeReviewTool(ctx context.Context, request *mcp.CallToolRequest, params co
 
 		// Use retry logic if configured
 		if codeReviewRetryWrapper != nil {
-			_, retryErr := codeReviewRetryWrapper.DoWithData(ctx, func(attempt uint) (interface{}, error) {
+			_, retryErr := codeReviewRetryWrapper.DoWithData(ctx, func(_ uint) (interface{}, error) {
 				result, err = codereview.PerformCodeReview(ctx, params)
 				return nil, err
 			})
@@ -259,14 +275,14 @@ func CodeReviewTool(ctx context.Context, request *mcp.CallToolRequest, params co
 		var cbOpenErr *circuitbreaker.CircuitBreakerError
 		if errors.As(cbErr, &cbOpenErr) && errors.Is(cbErr, circuitbreaker.ErrCircuitBreakerOpen) {
 			mcpErr := WrapCircuitBreakerError(cbErr, toolCodeReview)
-			LogAndHandleError(log, mcpErr, toolCodeReview, duration)
+			_ = LogAndHandleError(log, mcpErr, toolCodeReview, duration)
 			return nil, nil, mcpErr
 		}
 
 		// Tool execution error - wrap as internal error
 		mcpErr := types.WrapError(cbErr, "failed to perform code review")
 		metricsCol.RecordToolCall(toolCodeReview, "error", duration)
-		LogAndHandleError(log, mcpErr, toolCodeReview, duration)
+		_ = LogAndHandleError(log, mcpErr, toolCodeReview, duration)
 		return nil, nil, mcpErr
 	}
 
@@ -282,8 +298,8 @@ func CodeReviewTool(ctx context.Context, request *mcp.CallToolRequest, params co
 	}, result, nil
 }
 
-// TestGenTool handles the test generation tool invocation
-func TestGenTool(ctx context.Context, request *mcp.CallToolRequest, params testgen.TestGenParams) (*mcp.CallToolResult, *testgen.TestGenResult, error) {
+// TestGenTool handles the test generation tool invocation.
+func TestGenTool(ctx context.Context, _ *mcp.CallToolRequest, params testgen.TestGenParams) (*mcp.CallToolResult, *testgen.TestGenResult, error) {
 	startTime := time.Now()
 	log := logger.WithNewRequestID()
 
@@ -298,7 +314,7 @@ func TestGenTool(ctx context.Context, request *mcp.CallToolRequest, params testg
 		if err := rateLimitMiddleware.CheckRateLimit(toolTestGen, "default"); err != nil {
 			duration := time.Since(startTime)
 			mcpErr := WrapRateLimitError(err, toolTestGen)
-			LogAndHandleError(log, mcpErr, toolTestGen, duration)
+			_ = LogAndHandleError(log, mcpErr, toolTestGen, duration)
 			return nil, nil, mcpErr
 		}
 	}
@@ -314,7 +330,7 @@ func TestGenTool(ctx context.Context, request *mcp.CallToolRequest, params testg
 			log.LogValidationError("focus", "focus", params.Focus, toolTestGen)
 			metricsCol.RecordValidationFailure("focus", toolTestGen)
 			mcpErr := WrapValidationError(err, toolTestGen)
-			LogAndHandleError(log, mcpErr, toolTestGen, time.Since(startTime))
+			_ = LogAndHandleError(log, mcpErr, toolTestGen, time.Since(startTime))
 			return nil, nil, mcpErr
 		}
 		log.LogValidationSuccess("focus", "focus", toolTestGen)
@@ -328,7 +344,7 @@ func TestGenTool(ctx context.Context, request *mcp.CallToolRequest, params testg
 			log.LogValidationError("package_name", "package_name", params.PackageName, toolTestGen)
 			metricsCol.RecordValidationFailure("package_name", toolTestGen)
 			mcpErr := WrapValidationError(err, toolTestGen)
-			LogAndHandleError(log, mcpErr, toolTestGen, time.Since(startTime))
+			_ = LogAndHandleError(log, mcpErr, toolTestGen, time.Since(startTime))
 			return nil, nil, mcpErr
 		}
 		log.LogValidationSuccess("package_name", "package_name", toolTestGen)
@@ -341,7 +357,7 @@ func TestGenTool(ctx context.Context, request *mcp.CallToolRequest, params testg
 		log.LogValidationError("code", "code_safety", "code", toolTestGen)
 		metricsCol.RecordValidationFailure("code_safety", toolTestGen)
 		mcpErr := WrapValidationError(err, toolTestGen)
-		LogAndHandleError(log, mcpErr, toolTestGen, time.Since(startTime))
+		_ = LogAndHandleError(log, mcpErr, toolTestGen, time.Since(startTime))
 		return nil, nil, mcpErr
 	}
 	log.LogValidationSuccess("code", "code_safety", toolTestGen)
@@ -358,7 +374,7 @@ func TestGenTool(ctx context.Context, request *mcp.CallToolRequest, params testg
 
 		// Use retry logic if configured
 		if testGenRetryWrapper != nil {
-			_, retryErr := testGenRetryWrapper.DoWithData(ctx, func(attempt uint) (interface{}, error) {
+			_, retryErr := testGenRetryWrapper.DoWithData(ctx, func(_ uint) (interface{}, error) {
 				result, err = testgen.GenerateTests(ctx, params)
 				return nil, err
 			})
@@ -377,14 +393,14 @@ func TestGenTool(ctx context.Context, request *mcp.CallToolRequest, params testg
 		var cbOpenErr *circuitbreaker.CircuitBreakerError
 		if errors.As(cbErr, &cbOpenErr) && errors.Is(cbErr, circuitbreaker.ErrCircuitBreakerOpen) {
 			mcpErr := WrapCircuitBreakerError(cbErr, toolTestGen)
-			LogAndHandleError(log, mcpErr, toolTestGen, duration)
+			_ = LogAndHandleError(log, mcpErr, toolTestGen, duration)
 			return nil, nil, mcpErr
 		}
 
 		// Tool execution error - wrap as internal error
 		mcpErr := types.WrapError(cbErr, "failed to generate tests")
 		metricsCol.RecordToolCall(toolTestGen, "error", duration)
-		LogAndHandleError(log, mcpErr, toolTestGen, duration)
+		_ = LogAndHandleError(log, mcpErr, toolTestGen, duration)
 		return nil, nil, mcpErr
 	}
 
@@ -757,6 +773,21 @@ func init() {
 }
 
 func main() {
+	// Parse command line flags
+	flag.BoolVar(&showVersion, "version", false, "Show version information and exit")
+	flag.BoolVar(&showFullVersion, "version-full", false, "Show detailed version information and exit")
+	flag.Parse()
+
+	// Show version if requested
+	if showVersion {
+		printVersion()
+		os.Exit(0)
+	}
+	if showFullVersion {
+		printFullVersion()
+		os.Exit(0)
+	}
+
 	// Setup graceful shutdown
 	setupGracefulShutdown()
 

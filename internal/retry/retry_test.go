@@ -394,7 +394,7 @@ func TestRetrySuccessOnFirstAttempt(t *testing.T) {
 	retryer := NewRetryer(config)
 
 	callCount := 0
-	fn := func(attempt uint) error {
+	fn := func(_ uint) error {
 		callCount++
 		return nil
 	}
@@ -417,7 +417,7 @@ func TestRetrySuccessOnSecondAttempt(t *testing.T) {
 	retryer := NewRetryer(config)
 
 	callCount := 0
-	fn := func(attempt uint) error {
+	fn := func(_ uint) error {
 		callCount++
 		if callCount < 2 {
 			return errors.New("test error")
@@ -443,7 +443,7 @@ func TestRetryMaxAttempts(t *testing.T) {
 	retryer := NewRetryer(config)
 
 	callCount := 0
-	fn := func(attempt uint) error {
+	fn := func(_ uint) error {
 		callCount++
 		return errors.New("always fails")
 	}
@@ -478,7 +478,7 @@ func TestRetryContextCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	callCount := 0
-	fn := func(attempt uint) error {
+	fn := func(_ uint) error {
 		callCount++
 		if callCount == 3 {
 			cancel()

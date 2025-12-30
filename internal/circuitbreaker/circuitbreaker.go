@@ -145,7 +145,7 @@ func (cb *CircuitBreaker) RecordSuccess() {
 }
 
 // RecordFailure records a failed call
-func (cb *CircuitBreaker) RecordFailure(err error) {
+func (cb *CircuitBreaker) RecordFailure(_ error) {
 	cb.mutex.Lock()
 	defer cb.mutex.Unlock()
 

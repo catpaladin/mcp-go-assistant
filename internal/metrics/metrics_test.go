@@ -130,7 +130,7 @@ func TestMetrics_HTTPHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/metrics", nil)
 	w := httptest.NewRecorder()
 
-	metricsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	metricsHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		// The handler would normally be provided by promhttp
 		w.WriteHeader(http.StatusOK)
 	})
