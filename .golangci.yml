@@ -1,5 +1,3 @@
-version: "1.21"
-
 linters:
   enable:
     - gofmt
@@ -21,10 +19,7 @@ linters:
     - bodyclose
     - prealloc
     - exportloopref
-
   disable:
     - exhaustivestruct
     - scopelint
-
-run:
-  timeout: 10m
+    - wsl
