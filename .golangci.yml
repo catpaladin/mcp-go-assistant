@@ -1,0 +1,30 @@
+version: "1.21"
+
+linters:
+  enable:
+    - gofmt
+    - govet
+    - staticcheck
+    - unused
+    - gosimple
+    - ineffassign
+    - gosec
+    - errcheck
+    - goconst
+    - godot
+    - misspell
+    - gocritic
+    - revive
+    - stylecheck
+    - unconvert
+    - goimports
+    - bodyclose
+    - prealloc
+    - exportloopref
+
+  disable:
+    - exhaustivestruct
+    - scopelint
+
+run:
+  timeout: 10m
