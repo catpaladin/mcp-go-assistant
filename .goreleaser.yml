@@ -8,13 +8,15 @@ before:
     - go mod verify
 
 builds:
-  - env:
+  - id: mcp-go-assistant
+    env:
       - CGO_ENABLED=0
-    mod_timestamp: '{{ .CommitTimestamp }}'
+    mod_timestamp: "{{ .CommitTimestamp }}"
     flags:
       - -trimpath
     ldflags:
-      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser'
+      - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X
+        main.date={{.Date}} -X main.builtBy=goreleaser"
     goos:
       - linux
       - darwin
@@ -22,80 +24,47 @@ builds:
     goarch:
       - amd64
       - arm64
-    binary: '{{ .ProjectName }}'
+    binary: "{{ .ProjectName }}"
     main: ./cmd/mcp-go-assistant
 
-  - env:
-      - CGO_ENABLED=0
-    mod_timestamp: '{{ .CommitTimestamp }}'
-    flags:
-      - -trimpath
-    ldflags:
-      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser'
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - amd64
-      - arm64
-    binary: client
-    main: ./cmd/client
-
-  - env:
-      - CGO_ENABLED=0
-    mod_timestamp: '{{ .CommitTimestamp }}'
-    flags:
-      - -trimpath
-    ldflags:
-      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser'
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - amd64
-      - arm64
-    binary: review-client
-    main: ./cmd/review-client
-
 archives:
-  - format: tar.gz
-    name_template: >-
-      {{ .ProjectName }}-
-      {{- .Tag }}-
-      {{- .Os }}-
-      {{- .Arch }}
-    files:
-      - LICENSE
-      - README.md
+  - id: mcp-go-assistant-archive
+    name_template: |-
+      net-tools_{{ .Tag }}_{{ .Os }}_
+      {{- with .Arch -}}
+        {{- if (eq . "386") -}}i386
+        {{- else if (eq . "amd64") -}}x86_64
+        {{- else -}}{{- . -}}
+        {{- end -}} 
+      {{ end }}
+      {{- with .Arm -}}
+        {{- if (eq . "6") -}}hf
+        {{- else -}}v{{- . -}}
+        {{- end -}}
+      {{- end -}}
+    ids:
+      - mcp-go-assistant
+    files: ["LICENSE"]
     format_overrides:
       - goos: windows
         format: zip
 
+universal_binaries:
+  - replace: true
+
 checksum:
-  name_template: '{{ .ProjectName }}_{{ .Tag }}_checksums.txt'
+  name_template: "checksums.txt"
+  algorithm: sha256
 
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
-      - '^ci:'
-      - '^chore:'
-      - '^style:'
-
-signs:
-  - artifacts: checksum
-    args:
-      - "--batch"
-      - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}"
-      - "--output"
-      - "${signature}"
-      - "--detach-sign"
-      - "${artifact}"
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "^style:"
 
 release:
   github:
