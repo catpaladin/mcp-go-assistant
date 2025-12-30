@@ -1,17 +1,25 @@
 # Release Workflow
 
-This project uses automated semantic versioning and release management powered by [GoReleaser](https://goreleaser.com/) and conventional commits.
+This project uses semi-automated semantic versioning and release management powered by [GoReleaser](https://goreleaser.com/) and conventional commits.
 
 ## How It Works
 
-When you merge a pull request to `main`, the release workflow automatically:
+The release process is **semi-automated**:
 
-1. Analyzes commits using conventional commits (via `scripts/tag-release.sh`)
-2. Determines the next version (major/minor/patch) based on commit types
-3. Runs GoReleaser to build binaries for multiple platforms
-4. Creates a GitHub release with auto-generated release notes and binaries
-5. Creates a Git tag (`vX.Y.Z`)
-6. Updates `CHANGELOG.md` with release notes
+1. After merging PRs to `main`, run `./scripts/tag-release.sh` locally
+2. The script analyzes commits and creates a version tag (vX.Y.Z)
+3. Push the tag to trigger the release workflow automatically
+4. GoReleaser builds cross-platform binaries
+5. GitHub release is created with binaries, checksums, and release notes
+6. CHANGELOG.md is automatically updated
+
+## Why This Approach?
+
+This avoids common pitfalls with fully-automated releases:
+- ✅ No infinite loops from CHANGELOG commits
+- ✅ Full control over when releases happen
+- ✅ Easy to test locally before pushing tags
+- ✅ Can skip releases by not running the script
 
 ## Conventional Commits
 
@@ -80,15 +88,16 @@ git commit -m "test: add unit tests for circuit breaker"
 
 ## Release Workflow
 
-The release workflow is triggered on pushes to `main` branch.
+The GitHub Actions workflow (`.github/workflows/release.yml`) is **triggered only on tag pushes**.
 
 ### Steps
 
-1. **Version Determination**: Analyzes commits using `scripts/tag-release.sh`
-2. **GoReleaser Build**: Builds cross-platform binaries
-3. **Create Release**: Publishes GitHub release with binaries and checksums
-4. **Create Tag**: Tags the commit with semantic version
-5. **Update Changelog**: Updates CHANGELOG.md with release notes
+1. **Local Version Calculation**: Run `./scripts/tag-release.sh` to determine version
+2. **Create Tag**: Script creates a tag (vX.Y.Z) and pushes it
+3. **Workflow Trigger**: Tag push triggers GitHub Actions
+4. **GoReleaser Build**: Builds cross-platform binaries
+5. **Create Release**: Publishes GitHub release with binaries and checksums
+6. **Update Changelog**: CHANGELOG.md is updated automatically
 
 ### GoReleaser Configuration
 
@@ -99,35 +108,42 @@ The `.goreleaser.yml` file configures:
 - Optional GPG signing (requires `GPG_FINGERPRINT` secret)
 - Release notes generated from commit messages
 
-### Manual Release
+## How to Make a Release
 
-To manually trigger a release (not recommended in normal workflow):
+### Quick Start
 
 ```bash
-# Ensure you're on main and up to date
+# 1. Ensure you're on main and up to date
 git checkout main
 git pull
 
-# Make sure all changes are committed
-git status
+# 2. Run the release script (dry run first to see what will happen)
+DRY_RUN=true ./scripts/tag-release.sh
 
-# Push to trigger release
-git push
+# 3. Create the tag and trigger release
+./scripts/tag-release.sh
 ```
 
-### Skip Release
+### What the Script Does
 
-To prevent a release from being created, add `[skip ci]` to the commit message:
+1. **Analyzes commits** since the last tag
+2. **Calculates version** based on commit types:
+   - `feat:` → Minor bump (v1.0.0 → v1.1.0)
+   - `fix:` or `perf:` → Patch bump (v1.1.0 → v1.1.1)
+   - `BREAKING CHANGE:` → Major bump (v1.1.1 → v2.0.0)
+3. **Creates tag** with semantic version
+4. **Pushes tag** to remote (triggers release workflow)
+5. **Updates CHANGELOG.md** with release notes
+
+### Skipping a Release
+
+If you push to `main` but don't want to create a release yet:
 
 ```bash
-git commit -m "chore: update documentation [skip ci]"
+# Just merge normally - release only happens when you run the script
+# OR skip CHANGELOG update:
+PUSH=false ./scripts/tag-release.sh
 ```
-
-## Version Management
-
-### Go Module Version
-
-When a release is created, the Go module version (`go.mod`) is updated automatically.
 
 ### Tag Format
 
@@ -169,25 +185,37 @@ To customize the release behavior:
 
 ## Troubleshooting
 
+### Script Won't Run
+
+1. Make sure you're on the `main` branch
+2. Ensure you have write access to the repository
+3. Check that the script is executable: `chmod +x scripts/tag-release.sh`
+
 ### Release Not Created
 
 1. Check that commits follow conventional commit format
-2. Ensure there are no merge commits (merge rebase instead)
-3. Verify that the workflow has permission to write to repository
+2. Verify the tag was pushed successfully
+3. Check GitHub Actions logs for errors
 
 ### Wrong Version Bumped
 
-1. Review commit types in the merge
+1. Review commit types since last tag
 2. Check for breaking changes (`!` or `BREAKING CHANGE:`)
-3. Ensure semantic-release configuration is correct
+3. Use `DRY_RUN=true` to preview before creating
 
-### Git Push Fails After Release
+### Tag Already Exists
 
-If semantic-release tries to push but fails:
+If the tag already exists:
+```bash
+# Delete local tag
+git tag -d vX.Y.Z
 
-1. Pull latest changes: `git pull --rebase`
-2. Resolve conflicts if any
-3. Push again
+# Delete remote tag
+git push origin :refs/tags/vX.Y.Z
+
+# Run script again
+./scripts/tag-release.sh
+```
 
 ## Best Practices
 
