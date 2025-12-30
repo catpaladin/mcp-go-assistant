@@ -1,11 +1,11 @@
-package main
+package example
 
 import (
 	"fmt"
 	"strings"
 )
 
-func main() {
+func ExamplePerformanceIssues() {
 	// This will be flagged for performance issues
 	result := ""
 	for i := 0; i < 10000; i++ {
@@ -39,7 +39,7 @@ func veryLongFunctionThatShouldBeBrokenDown(
 	param5 string,
 	param6 string,
 	param7 string) (string, error) {
-	
+
 	if param1 == "" {
 		if param2 == "" {
 			if param3 == "" {

@@ -1,8 +1,8 @@
-package main
+package example
 
 import "fmt"
 
-func main() {
+func ExampleTestCode() {
 	var name string = "world"
 	fmt.Printf("Hello %s\n", name)
 }
